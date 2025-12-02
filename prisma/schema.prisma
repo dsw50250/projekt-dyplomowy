@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int         @id @default(autoincrement())
+  name      String      @db.VarChar(255)
+  email     String      @unique @db.VarChar(255)
+  password  String      @db.VarChar(255)
+  role      String      @db.VarChar(20)
+  workload  Int?        @default(0)
+  Project   Project[]
+  Task      Task[]
+  UserSkill UserSkill[]
+}
+
+model Skill {
+  id        Int         @id @default(autoincrement())
+  name      String      @db.VarChar(100)
+  UserSkill UserSkill[]
+  TaskSkill TaskSkill[] // связь с задачами
+}
+
+model UserSkill {
+  userid  Int
+  skillid Int
+  Skill   Skill @relation(fields: [skillid], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  User    User  @relation(fields: [userid], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([userid, skillid])
+}
+
+model Project {
+  id          Int     @id @default(autoincrement())
+  name        String  @db.VarChar(255)
+  description String?
+  managerid   Int?
+  User        User?   @relation(fields: [managerid], references: [id], onUpdate: NoAction)
+  Task        Task[]
+}
+
+model Task {
+  id           Int      @id @default(autoincrement())
+  title        String   @db.VarChar(255)
+  description  String?
+  difficulty   Int?
+  status       String?  @default("todo") @db.VarChar(20)
+  projectid    Int?
+  assignedtoid Int?
+  User         User?    @relation(fields: [assignedtoid], references: [id], onUpdate: NoAction)
+  Project      Project? @relation(fields: [projectid], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  TaskSkill TaskSkill[] // обратная связь с TaskSkill
+}
+
+model TaskSkill {
+  taskid  Int
+  skillid Int
+  Task    Task  @relation(fields: [taskid], references: [id], onDelete: Cascade)
+  Skill   Skill @relation(fields: [skillid], references: [id], onDelete: Cascade)
+
+  @@id([taskid, skillid])
+}
