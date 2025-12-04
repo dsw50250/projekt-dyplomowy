@@ -3,21 +3,30 @@ import {
   createSkill,
   getAllSkills,
   getMySkills,
+  getUserSkills,
   addMySkills,
   removeMySkill
 } from "../controllers/skillController.js";
 
-import { authenticateToken } from "../middlewares/auth.js"; // <- твой auth.js
+import { authenticateToken } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// Все маршруты защищены JWT
+// Все маршруты защищены
 router.use(authenticateToken);
 
-router.post("/", createSkill);               // добавить новый навык (для админа/менеджера)
-router.get("/", getAllSkills);               // получить все навыки
-router.get("/me", getMySkills);             // мои навыки
-router.post("/me", addMySkills);            // добавить навыки себе
-router.delete("/me/:skillId", removeMySkill); // удалить навык у себя
+// Создание глобального навыка (только manager/admin)
+router.post("/", createSkill);
+
+// Получение всех навыков (для выбора)
+router.get("/", getAllSkills);
+
+// Навыки текущего пользователя
+router.get("/me", getMySkills);
+router.post("/me", addMySkills);
+router.delete("/me/:skillId", removeMySkill);
+
+// Навыки любого пользователя (только manager/admin)
+router.get("/user/:userId", getUserSkills);
 
 export default router;

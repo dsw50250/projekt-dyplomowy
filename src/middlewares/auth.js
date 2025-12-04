@@ -16,10 +16,17 @@ export const generateToken = (user) => {
 
 // Проверка JWT
 export const authenticateToken = async (req, res, next) => {
-  const authHeader = req.headers['authorization'] || req.cookies?.token;
-  const token = authHeader?.startsWith('Bearer ')
-    ? authHeader.split(' ')[1]
-    : authHeader;
+  let token;
+
+  const authHeader = req.headers['authorization'];
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  }
+
+  // Безопасно достаём из кук
+  if (!token && req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  }
 
   if (!token) return res.status(401).json({ error: "Token missing" });
 
@@ -31,7 +38,8 @@ export const authenticateToken = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    res.status(403).json({ error: "Invalid token" });
+    console.error("Token verify error:", err.message);
+    return res.status(403).json({ error: "Invalid token" });
   }
 };
 

@@ -11,7 +11,7 @@ import { requireRole } from "../middlewares/roles.js";
 
 const router = express.Router();
 
-// Получение всех задач — менеджер видит все, разработчик только свои
+// Получение всех задач
 router.get("/", authenticateToken, getAllTasks);
 
 // Создание задачи — только менеджер

@@ -1,0 +1,29 @@
+<script>
+  // Этот скрипт превращает объект задачи в HTML
+  const renderTask = (task) => {
+    const skills = task.TaskSkill?.map(ts => ts.Skill.name).join(", ") || "—";
+    const assignee = task.User?.name || "Не назначено";
+    const autoBadge = task.autoAssigned 
+      ? `<span class="text-green-600 font-medium text-sm">Назначено автоматически</span>`
+      : task.managerName 
+        ? `<span class="text-purple-600 font-medium text-sm">Назначено менеджером @${task.managerName}</span>`
+        : "";
+
+    return `
+      <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+        <div class="flex justify-between items-start mb-3">
+          <h3 class="text-xl font-semibold">${task.title}</h3>
+          <span class="px-3 py-1 rounded text-sm ${task.status === 'done' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+            ${task.status || 'todo'}
+          </span>
+        </div>
+        <p class="text-gray-600 mb-3">${task.description || "Без описания"}</p>
+        <div class="text-sm text-gray-500 space-y-1">
+          <p>Навыки: <strong>${skills}</strong></p>
+          <p>Исполнитель: <strong>${assignee}</strong></p>
+          <p>${autoBadge}</p>
+        </div>
+      </div>
+    `;
+  };
+</script>

@@ -4,7 +4,7 @@ import { generateToken } from "../middlewares/auth.js";
 
 // Регистрация пользователя
 export const registerUser = async (req, res) => {
-  const { name, email, password, role, skillIds } = req.body; // skillIds — массив id навыков
+  const { name, email, password, role, skillIds } = req.body;
   const validRoles = ["developer", "manager", "admin"];
   if (!validRoles.includes(role)) return res.status(400).json({ error: "Invalid role" });
 
@@ -20,7 +20,7 @@ export const registerUser = async (req, res) => {
           ? { create: skillIds.map(id => ({ skillid: id })) }
           : undefined
       },
-      include: { UserSkill: true }
+      include: { UserSkill: { include: { Skill: true } } }
     });
     res.json({ id: user.id, name: user.name, email: user.email, role: user.role, skills: user.UserSkill });
   } catch (err) {
@@ -31,6 +31,7 @@ export const registerUser = async (req, res) => {
 // Логин пользователя
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: "Email and password required" });
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
@@ -46,8 +47,10 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// Получить всех пользователей
+// Получить всех пользователей (только manager/admin)
 export const getAllUsers = async (req, res) => {
+  if (!["admin", "manager"].includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
+
   try {
     const users = await prisma.user.findMany({ include: { UserSkill: { include: { Skill: true } } } });
     res.json(users);
@@ -56,8 +59,9 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-// Получить только разработчиков
 export const getDevelopers = async (req, res) => {
+  if (!["admin", "manager"].includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
+
   try {
     const developers = await prisma.user.findMany({
       where: { role: "developer" },
@@ -69,8 +73,9 @@ export const getDevelopers = async (req, res) => {
   }
 };
 
-// Получить только менеджеров
 export const getManagers = async (req, res) => {
+  if (!["admin", "manager"].includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
+
   try {
     const managers = await prisma.user.findMany({
       where: { role: "manager" },
@@ -79,26 +84,5 @@ export const getManagers = async (req, res) => {
     res.json(managers);
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-};
-
-// Добавить навыки пользователю
-export const addUserSkills = async (req, res) => {
-  const { userId } = req.params;
-  const { skillIds } = req.body;
-
-  try {
-    const updated = await prisma.user.update({
-      where: { id: parseInt(userId) },
-      data: {
-        UserSkill: {
-          create: skillIds.map(id => ({ skillid: id }))
-        }
-      },
-      include: { UserSkill: { include: { Skill: true } } }
-    });
-    res.json(updated);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
   }
 };

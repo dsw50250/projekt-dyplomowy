@@ -10,21 +10,35 @@ import { authenticateToken } from "./src/middlewares/auth.js";
 dotenv.config();
 
 const app = express();
+
+// ТЕСТОВЫЙ РОУТ — ОТКРОЙ http://localhost:3000/test-login
+app.post("/test-login", (req, res) => {
+  console.log("req.body →", req.body); // ← это увидим в терминале
+  res.json({ received: req.body, ok: true });
+});
+
 app.use(express.json());
 app.use(cookieParser());
 
-// Пользователи — регистрация и логин открыты, остальное защищено
+// НОВАЯ СТРОКА — раздаём фронтенд
+app.use(express.static("public"));
+
+// Пользователи — регистрация и логин открыты
 app.use("/api/users", userRoutes);
 
-// Задачи — все маршруты защищены
+// Задачи
 app.use("/api/tasks", authenticateToken, taskRoutes);
 
-// Проекты — можно добавить authMiddleware если нужно
+// Проекты
 app.use("/api/projects", authenticateToken, projectRoutes);
 
-// Навыки — все маршруты защищены
+// Навыки
 app.use("/api/skills", skillRoutes);
 
-// Запуск сервера
+// НОВАЯ СТРОКА — главная страница
+app.get("/", (req, res) => {
+  res.sendFile("login.html", { root: "public" });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

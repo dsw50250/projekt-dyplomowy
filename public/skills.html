@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Навыки</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body class="h-full bg-gray-50 flex">
+  <div hx-get="/components/sidebar.html" hx-trigger="load" hx-swap="innerHTML"></div>
+  <div class="flex-1 p-10">
+    <h2 class="text-3xl font-bold mb-6">Навыки</h2>
+    <div class="grid md:grid-cols-2 gap-8">
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-xl font-bold mb-4">Мои навыки</h3>
+        <div hx-get="/api/skills/me" hx-trigger="load" hx-swap="innerHTML" class="space-y-2"></div>
+        <button hx-get="/api/skills" hx-trigger="load once" hx-target="#all-skills" hx-swap="innerHTML" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Добавить навык</button>
+        <div id="all-skills" class="mt-4"></div>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow" hx-show="false" hx-get="/api/users/me" hx-trigger="load" hx-on::after-request="if(JSON.parse(event.detail.xhr.response).role==='manager') this.removeAttribute('hx-show')">
+        <h3 class="text-xl font-bold mb-4">Создать новый навык (только менеджер)</h3>
+        <form hx-post="/api/skills" hx-target="this" hx-swap="innerHTML">
+          <input name="name" placeholder="Название навыка" class="w-full border p-2 rounded mb-2"/>
+          <button class="bg-green-600 text-white px-4 py-2 rounded">Создать</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

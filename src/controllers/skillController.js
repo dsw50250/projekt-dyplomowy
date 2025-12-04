@@ -1,11 +1,8 @@
 import prisma from "../prismaClient.js";
 
-// Добавление нового навыка (только для админа или менеджера)
+// Создание глобального навыка (только manager/admin)
 export const createSkill = async (req, res) => {
-  if (!["admin", "manager"].includes(req.user.role)) {
-    return res.status(403).json({ error: "Forbidden" });
-  }
-
+  if (!["admin", "manager"].includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: "Skill name is required" });
 
@@ -17,7 +14,7 @@ export const createSkill = async (req, res) => {
   }
 };
 
-// Получение всех навыков
+// Все навыки (для выбора)
 export const getAllSkills = async (req, res) => {
   try {
     const skills = await prisma.skill.findMany();
@@ -27,7 +24,7 @@ export const getAllSkills = async (req, res) => {
   }
 };
 
-// Получение навыков текущего пользователя
+// Навыки текущего пользователя
 export const getMySkills = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
@@ -62,10 +59,27 @@ export const removeMySkill = async (req, res) => {
   const { skillId } = req.params;
   try {
     await prisma.userSkill.delete({
-      where: { userid_skillid: { userid: req.user.id, skillid: parseInt(skillId) } }
+      where: { userid_skillid: { userid: req.user.id, skillid: Number(skillId) } }
     });
     res.json({ message: "Skill removed" });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+};
+
+// Получение навыков другого пользователя (manager/admin)
+export const getUserSkills = async (req, res) => {
+  if (!["admin", "manager"].includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
+
+  const { userId } = req.params;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: Number(userId) },
+      include: { UserSkill: { include: { Skill: true } } }
+    });
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user.UserSkill);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
