@@ -11,16 +11,11 @@ dotenv.config();
 
 const app = express();
 
-// ТЕСТОВЫЙ РОУТ — ОТКРОЙ http://localhost:3000/test-login
-app.post("/test-login", (req, res) => {
-  console.log("req.body →", req.body); // ← это увидим в терминале
-  res.json({ received: req.body, ok: true });
-});
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// НОВАЯ СТРОКА — раздаём фронтенд
 app.use(express.static("public"));
 
 // Пользователи — регистрация и логин открыты
@@ -35,7 +30,6 @@ app.use("/api/projects", authenticateToken, projectRoutes);
 // Навыки
 app.use("/api/skills", skillRoutes);
 
-// НОВАЯ СТРОКА — главная страница
 app.get("/", (req, res) => {
   res.sendFile("login.html", { root: "public" });
 });
