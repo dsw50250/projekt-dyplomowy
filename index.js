@@ -1,43 +1,37 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
+import cors from "cors";
+
 import userRoutes from "./src/routes/userRoutes.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
 import projectRoutes from "./src/routes/projectRoutes.js";
 import skillRoutes from "./src/routes/skillRoutes.js";
-import { authenticateToken } from "./src/middlewares/auth.js";
 
 dotenv.config();
-
 const app = express();
 
-// ТЕСТОВЫЙ РОУТ — ОТКРОЙ http://localhost:3000/test-login
-app.post("/test-login", (req, res) => {
-  console.log("req.body →", req.body); // ← это увидим в терминале
-  res.json({ received: req.body, ok: true });
-});
+// CORS
+app.use(cors({
+  origin: "http://localhost:3001",
+  credentials: true,
+}));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// НОВАЯ СТРОКА — раздаём фронтенд
-app.use(express.static("public"));
 
-// Пользователи — регистрация и логин открыты
+// Роуты
 app.use("/api/users", userRoutes);
-
-// Задачи
-app.use("/api/tasks", authenticateToken, taskRoutes);
-
-// Проекты
-app.use("/api/projects", authenticateToken, projectRoutes);
-
-// Навыки
+app.use("/api/tasks", taskRoutes);
+app.use("/api/projects", projectRoutes);
 app.use("/api/skills", skillRoutes);
 
-// НОВАЯ СТРОКА — главная страница
-app.get("/", (req, res) => {
-  res.sendFile("login.html", { root: "public" });
+// Ошибки
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal server error" });
 });
 
 const PORT = process.env.PORT || 3000;

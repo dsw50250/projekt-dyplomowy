@@ -13,7 +13,10 @@ const router = express.Router();
 // Регистрация и логин открыты
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-
+router.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "Logged out" });
+});
 router.use(authenticateToken)
 // Получение пользователей (все, dev, manager)
 router.get("/", getAllUsers);

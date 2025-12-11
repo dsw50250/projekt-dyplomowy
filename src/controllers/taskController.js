@@ -17,11 +17,12 @@ export const getAllTasks = async (req, res) => {
       return res.status(403).json({ error: "Forbidden" });
     }
 
-    const tasksWithMeta = tasks.map(task => ({
-      ...task,
-      autoAssigned: task.assignedtoid && !task.manuallyAssigned, // если не вручную
-      managerName: req.user.name
-    }));
+// В getAllTasks — полностью замени этот блок:
+const tasksWithMeta = tasks.map(task => ({
+  ...task,
+  autoAssigned: !!task.assignedtoid, // если есть исполнитель — значит, было назначение (авто или вручную)
+  managerName: req.user.name
+}));
 
     res.json(tasksWithMeta);
   } catch (err) {
@@ -50,7 +51,7 @@ export const createTask = async (req, res) => {
     }
 
     const task = await prisma.task.create({
-      data: { title, description, difficulty, status, projectid, assignedtoid: finalAssignedId }
+      data: { title, description, difficulty, status, projectid, assignedtoid: finalAssignedId, manuallyAssigned: manuallyAssigned }
     });
 
     if (requiredSkillIds?.length > 0) {

@@ -22,7 +22,18 @@ export const registerUser = async (req, res) => {
       },
       include: { UserSkill: { include: { Skill: true } } }
     });
-    res.json({ id: user.id, name: user.name, email: user.email, role: user.role, skills: user.UserSkill });
+
+    // === НОВАЯ ЧАСТЬ: автологин после регистрации ===
+    const token = generateToken(user);
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 8 * 60 * 60 * 1000 // 8 часов
+    });
+
+res.json({ token });
+    // ===========================================
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -41,7 +52,17 @@ export const loginUser = async (req, res) => {
     if (!valid) return res.status(401).json({ error: "Invalid password" });
 
     const token = generateToken(user);
-    res.json({ token });
+
+    // === НОВАЯ ЧАСТЬ: ставим куку ===
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 8 * 60 * 60 * 1000 // 8 часов
+    });
+
+res.json({ token });
+    // =================================
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
