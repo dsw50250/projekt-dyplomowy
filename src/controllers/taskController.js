@@ -1,28 +1,28 @@
 import prisma from "../prismaClient.js";
 
-// Получение задач
 export const getAllTasks = async (req, res) => {
   try {
     let tasks;
-    if (req.user.role === "manager") {
+
+    if (req.user.role === "manager" || req.user.role === "admin") {
+      // Менеджер видит ВСЕ задачи
       tasks = await prisma.task.findMany({
         include: { User: true, Project: true, TaskSkill: { include: { Skill: true } } }
       });
     } else if (req.user.role === "developer") {
+      // Developer видит ВСЕ задачи (не только свои)
       tasks = await prisma.task.findMany({
-        where: { assignedtoid: req.user.id },
         include: { User: true, Project: true, TaskSkill: { include: { Skill: true } } }
       });
     } else {
       return res.status(403).json({ error: "Forbidden" });
     }
 
-// В getAllTasks — полностью замени этот блок:
-const tasksWithMeta = tasks.map(task => ({
-  ...task,
-  autoAssigned: !!task.assignedtoid, // если есть исполнитель — значит, было назначение (авто или вручную)
-  managerName: req.user.name
-}));
+    const tasksWithMeta = tasks.map(task => ({
+      ...task,
+      autoAssigned: !!task.assignedtoid,
+      managerName: req.user.name
+    }));
 
     res.json(tasksWithMeta);
   } catch (err) {
@@ -82,33 +82,70 @@ export const updateTask = async (req, res) => {
   const { title, description, difficulty, status, projectid, assignedtoid, requiredSkillIds } = req.body;
 
   try {
-    const task = await prisma.task.update({
+    // Проверка прав: developer может менять статус ТОЛЬКО своей задачи
+    if (req.user.role === "developer") {
+      if (req.body.status) { // если пытается изменить статус
+        const task = await prisma.task.findUnique({
+          where: { id: parseInt(id) }
+        });
+
+        if (!task || task.assignedtoid !== req.user.id) {
+          return res.status(403).json({ error: "You can only update status of your own tasks" });
+        }
+      }
+
+      // Опционально: запретить developer'у менять другие поля (assignedtoid, projectid и т.д.)
+      // Если хочешь — раскомментируй:
+      // if (assignedtoid || projectid) {
+      //   return res.status(403).json({ error: "Developers cannot reassign tasks or change project" });
+      // }
+    }
+
+    // Основное обновление задачи (доступно manager'у полностью, developer'у — только статус)
+    const updatedTask = await prisma.task.update({
       where: { id: parseInt(id) },
-      data: { title, description, difficulty, status, projectid, assignedtoid }
+      data: {
+        title,
+        description,
+        difficulty,
+        status,
+        projectid: projectid ? parseInt(projectid) : undefined,
+        assignedtoid: assignedtoid ? parseInt(assignedtoid) : undefined,
+      }
     });
 
-    if (requiredSkillIds) {
-      await prisma.taskSkill.deleteMany({ where: { taskid: task.id } });
+    // Обновление требуемых скиллов (если переданы)
+    if (requiredSkillIds && Array.isArray(requiredSkillIds)) {
+      await prisma.taskSkill.deleteMany({ where: { taskid: updatedTask.id } });
       await prisma.taskSkill.createMany({
-        data: requiredSkillIds.map(skillid => ({ taskid: task.id, skillid }))
+        data: requiredSkillIds.map(skillid => ({
+          taskid: updatedTask.id,
+          skillid: parseInt(skillid)
+        }))
       });
     }
 
+    // Возвращаем обновлённую задачу с скиллами
     const taskWithSkills = await prisma.task.findUnique({
-      where: { id: task.id },
-      include: { TaskSkill: { include: { Skill: true } }, User: true }
+      where: { id: updatedTask.id },
+      include: {
+        TaskSkill: { include: { Skill: true } },
+        User: true,
+        Project: true
+      }
     });
 
     res.json({
       ...taskWithSkills,
-      autoAssigned: false,
+      autoAssigned: !!updatedTask.assignedtoid && !updatedTask.manuallyAssigned,
       managerName: req.user.name
     });
+
   } catch (err) {
+    console.error("Update task error:", err);
     res.status(400).json({ error: err.message });
   }
 };
-
 // Удаление задачи
 export const deleteTask = async (req, res) => {
   const { id } = req.params;

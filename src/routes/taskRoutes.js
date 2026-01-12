@@ -17,8 +17,8 @@ router.get("/", authenticateToken, getAllTasks);
 // Создание задачи — только менеджер
 router.post("/", authenticateToken, requireRole(["manager"]), createTask);
 
-// Обновление задачи — только менеджер
-router.put("/:id", authenticateToken, requireRole(["manager"]), updateTask);
+// Обновление задачи — только девелопер
+router.put("/:id", authenticateToken, updateTask);
 
 // Удаление задачи — только менеджер
 router.delete("/:id", authenticateToken, requireRole(["manager"]), deleteTask);
