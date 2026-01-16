@@ -1,8 +1,5 @@
 import prisma from "../prismaClient.js";
 
-// Получить проекты:
-// - менеджер видит все проекты
-// - разработчик видит только проекты, где есть назначенные ему задачи
 export const getAllProjects = async (req, res) => {
   try {
     let projects;
@@ -15,7 +12,6 @@ export const getAllProjects = async (req, res) => {
         },
       });
     } else {
-      // разработчик видит только свои проекты
       projects = await prisma.project.findMany({
         where: {
           Task: {
@@ -35,7 +31,6 @@ export const getAllProjects = async (req, res) => {
   }
 };
 
-// Создать проект (только менеджер)
 export const createProject = async (req, res) => {
   const { name, description } = req.body;
 
@@ -44,7 +39,7 @@ export const createProject = async (req, res) => {
       data: {
         name,
         description,
-        managerid: req.user.id, // автоматом назначаем создателя менеджером проекта
+        managerid: req.user.id, 
       },
     });
 
@@ -54,7 +49,6 @@ export const createProject = async (req, res) => {
   }
 };
 
-// Обновить проект (только менеджер)
 export const updateProject = async (req, res) => {
   const { id } = req.params;
   const { name, description } = req.body;
@@ -71,7 +65,6 @@ export const updateProject = async (req, res) => {
   }
 };
 
-// Удалить проект (только менеджер)
 export const deleteProject = async (req, res) => {
   const { id } = req.params;
 

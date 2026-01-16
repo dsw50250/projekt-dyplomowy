@@ -2,7 +2,6 @@ import prisma from "../prismaClient.js";
 import bcrypt from "bcrypt";
 import { generateToken } from "../middlewares/auth.js";
 
-// Регистрация пользователя
 export const registerUser = async (req, res) => {
   const { name, email, password, role, skillIds } = req.body;
   const validRoles = ["developer", "manager", "admin"];
@@ -23,23 +22,19 @@ export const registerUser = async (req, res) => {
       include: { UserSkill: { include: { Skill: true } } }
     });
 
-    // === НОВАЯ ЧАСТЬ: автологин после регистрации ===
     const token = generateToken(user);
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 8 * 60 * 60 * 1000 // 8 часов
+      maxAge: 8 * 60 * 60 * 1000
     });
 
 res.json({ token });
-    // ===========================================
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
-
-// Логин пользователя
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: "Email and password required" });
@@ -53,22 +48,27 @@ export const loginUser = async (req, res) => {
 
     const token = generateToken(user);
 
-    // === НОВАЯ ЧАСТЬ: ставим куку ===
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 8 * 60 * 60 * 1000 // 8 часов
+      maxAge: 8 * 60 * 60 * 1000
     });
 
-res.json({ token });
-    // =================================
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role
+      }
+    });
+
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 };
 
-// Получить всех пользователей (только manager/admin)
 export const getAllUsers = async (req, res) => {
   if (!["admin", "manager"].includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
 

@@ -1,5 +1,7 @@
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
+import { ThemeProvider } from "../context/ThemeContext"; // Новый
+import ToastProvider from "../components/ToastProvider"; // Создай этот файл, как ниже
 
 export const metadata = {
   title: "Task Management System",
@@ -10,15 +12,16 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* Tailwind CDN */}
-        {/* Иконки Heroicons */}
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-        />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
       </head>
-      <body className="bg-gray-50 min-h-screen">
-        <AuthProvider>{children}</AuthProvider>
+      <body>
+        <ThemeProvider> {/* Новый */}
+          <AuthProvider>
+            <ToastProvider>         
+              {children}
+            </ToastProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

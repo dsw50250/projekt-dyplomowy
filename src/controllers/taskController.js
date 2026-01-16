@@ -5,14 +5,28 @@ export const getAllTasks = async (req, res) => {
     let tasks;
 
     if (req.user.role === "manager" || req.user.role === "admin") {
-      // Менеджер видит ВСЕ задачи
       tasks = await prisma.task.findMany({
-        include: { User: true, Project: true, TaskSkill: { include: { Skill: true } } }
+        select: { 
+          id: true,
+          title: true,
+          description: true,
+          difficulty: true,
+          status: true,
+          dueDate: true,
+          assignedtoid: true,
+          projectid: true,
+          User: { select: { id: true, name: true } },
+          Project: { select: { id: true, name: true } },
+          TaskSkill: { include: { Skill: true } }
+        }
       });
     } else if (req.user.role === "developer") {
-      // Developer видит ВСЕ задачи (не только свои)
       tasks = await prisma.task.findMany({
-        include: { User: true, Project: true, TaskSkill: { include: { Skill: true } } }
+        include: {
+          User: { select: { id: true, name: true } },
+          Project: { select: { id: true, name: true } },
+          TaskSkill: { include: { Skill: true } }
+        }
       });
     } else {
       return res.status(403).json({ error: "Forbidden" });
@@ -24,15 +38,18 @@ export const getAllTasks = async (req, res) => {
       managerName: req.user.name
     }));
 
+console.log("Tasks sent to frontend:", tasksWithMeta.length);
+
     res.json(tasksWithMeta);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Создание задачи с авто-распределением
 export const createTask = async (req, res) => {
-  const { title, description, difficulty, status, projectid, assignedtoid, requiredSkillIds } = req.body;
+  const { title, description, difficulty, status, projectid, assignedtoid, requiredSkillIds, dueDate } = req.body;
+
+  if (!title || !projectid) return res.status(400).json({ error: "Title and project required" });
 
   try {
     let finalAssignedId = assignedtoid;
@@ -50,9 +67,12 @@ export const createTask = async (req, res) => {
       }
     }
 
-    const task = await prisma.task.create({
-      data: { title, description, difficulty, status, projectid, assignedtoid: finalAssignedId, manuallyAssigned: manuallyAssigned }
-    });
+    const taskData = { 
+      title, description, difficulty, status, projectid, assignedtoid: finalAssignedId, manuallyAssigned,
+      dueDate: dueDate ? new Date(dueDate) : undefined // Новый
+    };
+
+    const task = await prisma.task.create({ data: taskData });
 
     if (requiredSkillIds?.length > 0) {
       await prisma.taskSkill.createMany({
@@ -75,16 +95,13 @@ export const createTask = async (req, res) => {
   }
 };
 
-
-// Обновление задачи
 export const updateTask = async (req, res) => {
   const { id } = req.params;
-  const { title, description, difficulty, status, projectid, assignedtoid, requiredSkillIds } = req.body;
+  const { title, description, difficulty, status, projectid, assignedtoid, requiredSkillIds, dueDate } = req.body;
 
   try {
-    // Проверка прав: developer может менять статус ТОЛЬКО своей задачи
     if (req.user.role === "developer") {
-      if (req.body.status) { // если пытается изменить статус
+      if (req.body.status) { 
         const task = await prisma.task.findUnique({
           where: { id: parseInt(id) }
         });
@@ -94,14 +111,11 @@ export const updateTask = async (req, res) => {
         }
       }
 
-      // Опционально: запретить developer'у менять другие поля (assignedtoid, projectid и т.д.)
-      // Если хочешь — раскомментируй:
-      // if (assignedtoid || projectid) {
-      //   return res.status(403).json({ error: "Developers cannot reassign tasks or change project" });
-      // }
+      if (assignedtoid || projectid) {
+      return res.status(403).json({ error: "Developers cannot reassign tasks or change project" });
+      }
     }
 
-    // Основное обновление задачи (доступно manager'у полностью, developer'у — только статус)
     const updatedTask = await prisma.task.update({
       where: { id: parseInt(id) },
       data: {
@@ -111,10 +125,10 @@ export const updateTask = async (req, res) => {
         status,
         projectid: projectid ? parseInt(projectid) : undefined,
         assignedtoid: assignedtoid ? parseInt(assignedtoid) : undefined,
+        dueDate: dueDate ? new Date(dueDate) : undefined 
       }
     });
 
-    // Обновление требуемых скиллов (если переданы)
     if (requiredSkillIds && Array.isArray(requiredSkillIds)) {
       await prisma.taskSkill.deleteMany({ where: { taskid: updatedTask.id } });
       await prisma.taskSkill.createMany({
@@ -125,7 +139,6 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    // Возвращаем обновлённую задачу с скиллами
     const taskWithSkills = await prisma.task.findUnique({
       where: { id: updatedTask.id },
       include: {
@@ -146,7 +159,7 @@ export const updateTask = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
-// Удаление задачи
+
 export const deleteTask = async (req, res) => {
   const { id } = req.params;
   try {

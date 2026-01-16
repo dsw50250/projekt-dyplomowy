@@ -5,16 +5,14 @@ import dotenv from "dotenv";
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Генерация токена
 export const generateToken = (user) => {
   return jwt.sign(
     { id: user.id, role: user.role },
     JWT_SECRET,
-    { expiresIn: "8h" } // оставляем здесь
+    { expiresIn: "8h" } 
   );
 };
 
-// Проверка JWT
 export const authenticateToken = async (req, res, next) => {
   let token;
 
@@ -23,7 +21,6 @@ export const authenticateToken = async (req, res, next) => {
     token = authHeader.split(' ')[1];
   }
 
-  // Безопасно достаём из кук
   if (!token && req.cookies && req.cookies.token) {
     token = req.cookies.token;
   }
@@ -43,7 +40,6 @@ export const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Проверка роли
 export const requireRole = (roles) => (req, res, next) => {
   if (!req.user) return res.status(401).json({ error: "User not authenticated" });
   if (!roles.includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });

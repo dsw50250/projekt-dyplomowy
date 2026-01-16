@@ -1,6 +1,5 @@
 import prisma from "../prismaClient.js";
 
-// Создание глобального навыка (только manager/admin)
 export const createSkill = async (req, res) => {
   if (!["admin", "manager"].includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
   const { name } = req.body;
@@ -14,7 +13,6 @@ export const createSkill = async (req, res) => {
   }
 };
 
-// Все навыки (для выбора)
 export const getAllSkills = async (req, res) => {
   try {
     const skills = await prisma.skill.findMany();
@@ -24,7 +22,6 @@ export const getAllSkills = async (req, res) => {
   }
 };
 
-// Навыки текущего пользователя
 export const getMySkills = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
@@ -37,7 +34,6 @@ export const getMySkills = async (req, res) => {
   }
 };
 
-// Добавление навыков текущему пользователю
 export const addMySkills = async (req, res) => {
   const { skillIds } = req.body;
   if (!skillIds || !Array.isArray(skillIds)) return res.status(400).json({ error: "skillIds must be an array" });
@@ -54,7 +50,6 @@ export const addMySkills = async (req, res) => {
   }
 };
 
-// Удаление навыка у текущего пользователя
 export const removeMySkill = async (req, res) => {
   const { skillId } = req.params;
   try {
@@ -67,7 +62,6 @@ export const removeMySkill = async (req, res) => {
   }
 };
 
-// Получение навыков другого пользователя (manager/admin)
 export const getUserSkills = async (req, res) => {
   if (!["admin", "manager"].includes(req.user.role)) return res.status(403).json({ error: "Forbidden" });
 

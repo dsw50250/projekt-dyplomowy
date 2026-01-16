@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
-import { loginRequest } from "../../services/authService";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,12 +17,15 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
+    console.log("=== КНОПКА LOGIN НАЖАТА ===");
+    console.log("Отправляем на логин:", { email, password });
+
     try {
-      const data = await loginRequest(email, password);
-      login(data.token);
+      await login(email, password);
       router.push("/dashboard");
     } catch (err) {
-      setError("Неверный email или пароль");
+      console.error("Login error:", err);
+      setError(err.response?.data?.error || "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -34,7 +37,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <i className="fas fa-tasks text-6xl text-indigo-600 mb-4"></i>
           <h1 className="text-4xl font-bold text-gray-800">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Войдите в систему управления задачами</p>
+          <p className="text-gray-600 mt-2">Sign in to your task management system</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -46,7 +49,7 @@ export default function LoginPage() {
               type="email"
               placeholder="your@email.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.trim())}
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
             />
@@ -80,7 +83,7 @@ export default function LoginPage() {
             {loading ? (
               <>
                 <i className="fas fa-spinner fa-spin"></i>
-                Вход...
+                Signing in...
               </>
             ) : (
               <>
@@ -94,10 +97,10 @@ export default function LoginPage() {
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>Demo accounts:</p>
           <p className="mt-2">
-            Manager: <code className="bg-gray-100 px-2 py-1 rounded">manager@example.com</code> / password
+            Manager: <code className="bg-gray-100 px-2 py-1 rounded">manager@example.com</code> / 1
           </p>
           <p>
-            Developer: <code className="bg-gray-100 px-2 py-1 rounded">dev@example.com</code> / password
+            Developer: <code className="bg-gray-100 px-2 py-1 rounded">bob@example.com</code> / 1
           </p>
         </div>
       </div>

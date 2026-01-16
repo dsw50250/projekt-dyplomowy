@@ -23,13 +23,13 @@ app.use(cookieParser());
 
 app.use(express.static("public"));
 
-// Роуты
+// Routes
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/skills", skillRoutes);
 
-// Ошибки
+// Errors
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Internal server error" });
