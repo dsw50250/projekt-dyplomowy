@@ -36,17 +36,41 @@ export const getMySkills = async (req, res) => {
 
 export const addMySkills = async (req, res) => {
   const { skillIds } = req.body;
-  if (!skillIds || !Array.isArray(skillIds)) return res.status(400).json({ error: "skillIds must be an array" });
+  if (!skillIds || !Array.isArray(skillIds)) {
+    return res.status(400).json({ error: "skillIds must be an array" });
+  }
+
+  const uniqueSkillIds = [...new Set(skillIds.map(id => Number(id)))]; // убираем дубли в массиве, если они есть
 
   try {
-    const updated = await prisma.user.update({
-      where: { id: req.user.id },
-      data: { UserSkill: { create: skillIds.map(id => ({ skillid: id })) } },
-      include: { UserSkill: { include: { Skill: true } } }
+    await prisma.$transaction(async (tx) => {
+      await tx.userSkill.deleteMany({
+        where: { userid: req.user.id },
+      });
+
+      if (uniqueSkillIds.length > 0) {
+        await tx.userSkill.createMany({
+          data: uniqueSkillIds.map(skillid => ({
+            userid: req.user.id,
+            skillid: skillid,
+          })),
+          skipDuplicates: true, 
+        });
+      }
     });
-    res.json(updated.UserSkill);
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { UserSkill: { include: { Skill: true } } },
+    });
+
+    res.json(user.UserSkill || []);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error("addMySkills error:", err);
+    if (err.code === 'P2002') {
+      return res.status(409).json({ error: "Конфликт: некоторые навыки уже существуют (дубликат)" });
+    }
+    res.status(500).json({ error: err.message || "Ошибка сервера" });
   }
 };
 

@@ -8,16 +8,20 @@ import {
   removeMySkill
 } from "../controllers/skillController.js";
 
-import { authenticateToken } from "../middlewares/auth.js";
+import { authenticateToken, requireRole } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-router.use(authenticateToken);
+router.use(authenticateToken); 
+
 router.post("/", createSkill);
 router.get("/", getAllSkills);
+
 router.get("/me", getMySkills);
-router.post("/me", addMySkills);
-router.delete("/me/:skillId", removeMySkill);
+
+router.post("/me", requireRole(['admin', 'developer']), addMySkills);
+router.delete("/me/:skillId", requireRole(['admin', 'developer']), removeMySkill);
+
 router.get("/user/:userId", getUserSkills);
 
 export default router;

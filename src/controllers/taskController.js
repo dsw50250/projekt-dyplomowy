@@ -4,7 +4,7 @@ export const getAllTasks = async (req, res) => {
   try {
     let tasks;
 
-    if (req.user.role === "manager" || req.user.role === "admin") {
+    if (req.user.role === "manager") {
       tasks = await prisma.task.findMany({
         select: { 
           id: true,
@@ -38,8 +38,6 @@ export const getAllTasks = async (req, res) => {
       managerName: req.user.name
     }));
 
-console.log("Tasks sent to frontend:", tasksWithMeta.length);
-
     res.json(tasksWithMeta);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -69,7 +67,7 @@ export const createTask = async (req, res) => {
 
     const taskData = { 
       title, description, difficulty, status, projectid, assignedtoid: finalAssignedId, manuallyAssigned,
-      dueDate: dueDate ? new Date(dueDate) : undefined // Новый
+      dueDate: dueDate ? new Date(dueDate) : undefined 
     };
 
     const task = await prisma.task.create({ data: taskData });

@@ -11,7 +11,6 @@ import skillRoutes from "./src/routes/skillRoutes.js";
 dotenv.config();
 const app = express();
 
-// CORS
 app.use(cors({
   origin: "http://localhost:3001",
   credentials: true,
@@ -23,13 +22,11 @@ app.use(cookieParser());
 
 app.use(express.static("public"));
 
-// Routes
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/skills", skillRoutes);
 
-// Errors
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Internal server error" });

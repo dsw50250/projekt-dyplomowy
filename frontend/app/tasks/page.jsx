@@ -425,105 +425,91 @@ function CreateEditModal({ isEdit, onClose, onSubmit, projects, developers, skil
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-      <div className={`w-full max-w-lg rounded-2xl p-8 shadow-2xl ${theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"}`}>
-        <h2 className="text-3xl font-bold mb-8">{modalTitle}</h2>
-        <form onSubmit={handleFormSubmit} className="space-y-6">
+      <div
+        className={`w-full max-w-lg rounded-2xl p-6 shadow-2xl ${theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"}`}
+        style={{ maxHeight: "90vh", overflowY: "auto" }}
+      >
+        <h2 className="text-3xl font-bold mb-4">{modalTitle}</h2>
+        <form onSubmit={handleFormSubmit} className="space-y-4">
           <input
             type="text"
             value={formTitle}
             onChange={(e) => setFormTitle(e.target.value)}
             placeholder="Task title"
             required
-            className={`w-full px-5 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"}`}
+            className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"}`}
           />
           <textarea
             value={formDescription}
             onChange={(e) => setFormDescription(e.target.value)}
             placeholder="Description (optional)"
-            rows="4"
-            className={`w-full px-5 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"}`}
+            rows="3"
+            className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"}`}
           />
           <select
             value={formProjectid}
             onChange={(e) => setFormProjectid(e.target.value)}
-            className={`w-full px-5 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"}`}
+            className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"}`}
           >
             <option value="">Select Project</option>
             {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
+              <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
           <select
             value={formAssignedtoid}
             onChange={(e) => setFormAssignedtoid(e.target.value)}
-            className={`w-full px-5 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"}`}
+            className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"}`}
           >
             <option value="">Auto-assign</option>
-                        {developers.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
+            {developers.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </select>
           <select
             value={formStatus}
             onChange={(e) => setFormStatus(e.target.value)}
-            className={`w-full px-5 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
-            }`}
+            className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"}`}
           >
             {statuses.map((s) => (
-              <option key={s} value={s}>
-                {s.replace("-", " ").toUpperCase()}
-              </option>
+              <option key={s} value={s}>{s.replace("-", " ").toUpperCase()}</option>
             ))}
           </select>
-
           <input
             type="date"
             value={formDueDate}
             onChange={(e) => setFormDueDate(e.target.value)}
-            className={`w-full px-5 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"
-            }`}
+            className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "border-gray-300 text-gray-900"}`}
           />
-
           <div>
-            <p className="font-medium mb-3">Required Skills:</p>
-            <div className="grid grid-cols-2 gap-3">
+            <p className="font-medium mb-2">Required Skills:</p>
+            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
               {skills.map((skill) => (
                 <label key={skill.id} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formRequiredSkillIds.includes(skill.id)}
                     onChange={() => handleToggleSkill(skill.id)}
-                    className="w-5 h-5 text-blue-600 rounded"
+                    className="w-4 h-4 text-blue-600 rounded"
                   />
                   <span>{skill.name}</span>
                 </label>
               ))}
             </div>
           </div>
-
-          <div className="flex gap-4 justify-end mt-8">
+          <div className="flex gap-4 justify-end mt-4">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className={`px-8 py-3 rounded-xl font-semibold ${
-                theme === "dark" ? "bg-gray-700 text-white hover:bg-gray-600" : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-              }`}
+              className={`px-6 py-2 rounded-xl font-semibold ${theme === "dark" ? "bg-gray-700 text-white hover:bg-gray-600" : "bg-gray-200 text-gray-800 hover:bg-gray-300"}`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className={`px-8 py-3 rounded-xl font-semibold text-white ${
-                theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-600 hover:bg-blue-700"
-              }`}
+              className={`px-6 py-2 rounded-xl font-semibold text-white ${theme === "dark" ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-600 hover:bg-blue-700"}`}
             >
               {loading ? "Saving..." : isEdit ? "Update" : "Create"}
             </button>
@@ -533,4 +519,3 @@ function CreateEditModal({ isEdit, onClose, onSubmit, projects, developers, skil
     </div>
   );
 }
-
