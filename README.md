@@ -33,6 +33,7 @@ The main goal of the system is to support project managers and teams in organizi
 - **Task** – tasks belonging to a project (title, description, difficulty, status, due date, required skills, assigned user)  
 - **TaskSkill** – many-to-many relation (which skills are required for the task)
 
+```text
 projekt-dyplomowy/
 ├── frontend/                     # Next.js application
 │   ├── app/
@@ -48,38 +49,40 @@ projekt-dyplomowy/
 │   ├── components/
 │   │   └── ToastProvider.jsx
 │   ├── context/
-│   │   ├── AuthContext.jsx       # Auth logic + login/logout
+│   │   ├── AuthContext.jsx
 │   │   └── ThemeContext.jsx
 │   ├── services/
-│   │   ├── api.js                # Axios instance + token interceptor
+│   │   ├── api.js
 │   │   ├── authService.js
 │   │   ├── taskService.js
 │   │   └── userService.js
 │   └── package.json
 │
 ├── prisma/
-│   └── schema.prisma             # Database models (User, Task, Project, Skill...)
+│   └── schema.prisma
 │
 ├── src/
 │   ├── controllers/
 │   │   ├── projectController.js
-│   │   ├── taskController.js     # ← likely contains auto-assignment logic
+│   │   ├── taskController.js
 │   │   ├── skillController.js
-│   │   └── userController.js     # registerUser, loginUser, getAllUsers...
+│   │   └── userController.js
 │   ├── middlewares/
-│   │   ├── auth.js               # authenticateToken, generateToken
-│   │   └── roles.js              # requireRole middleware
+│   │   ├── auth.js
+│   │   └── roles.js
 │   └── routes/
 │       ├── projectRoutes.js
 │       ├── taskRoutes.js
 │       ├── skillRoutes.js
-│       └── userRoutes.js         # /users/login, /users/register...
+│       └── userRoutes.js
 │
-├── index.js                      # Main server entry (Express app setup)
+├── index.js
 ├── .env.example
 ├── package.json
 ├── package-lock.json
 └── README.md
+```
+
 
 ### Installation & Local Development
 
